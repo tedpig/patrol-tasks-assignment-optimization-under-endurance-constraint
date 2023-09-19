@@ -1,0 +1,53 @@
+clc
+clear
+
+load city_location.mat
+load city_distance.mat
+load city_path.mat
+global S_dot E_dot S_row S_col RR
+S_dot=[30.54 122.00];
+E_dot=[30.65 122.18];
+geolimits([S_dot(1) E_dot(1)],[S_dot(2) E_dot(2)]);
+source=nodes(1,:);
+nodes=nodes(2:26,:);
+
+for i=1:length(nodes)
+    for j=1:length(nodes)
+        city_distance(j,i)=city_distance(i,j);
+        city_path{j,i}=flip(city_path{i,j},1);
+    end
+end
+
+city_distance=city_distance([2:26,1],[2:26,1]);
+city_path=city_path([2:26,1],[2:26,1]);
+
+hold on;
+A=[4 12 15 16 18]
+for i=1:length(nodes)
+    geoplot(nodes(i,1),nodes(i,2),'ko',"MarkerFaceColor",'k')
+
+    text(nodes(i,1)+0.003,nodes(i,2)-0.001,num2str(i));
+end
+
+geoplot(source(1),source(2),'ro',"MarkerFaceColor",'r')
+text(source(1)+0.003,source(2)-0.001,'0','Color','r');
+for i=1:length(city_path)-1
+    for j=i+1:length(city_path)
+        route=city_path{i,j};
+        lon=route(:,1);
+        lat=route(:,2);
+        geoplot(lat, lon,'LineWidth', 0.5,'Color','k','LineStyle','--');
+    end
+end
+
+% wm = webmap('National Geographic Map');
+% wmmarker(nodes(:,1), nodes(:,2), 'Color', 'g');
+% wmmarker(source(1), source(2), 'Color', 'r');
+% for i=1:length(nodes)-1
+%     for j=i+1:length(nodes)
+%         route=city_path{i,j};
+%         lon=route(:,1);
+%         lat=route(:,2);
+%         wmline(lat, lon,'Color', 'black', 'Width', 0.5);
+%     end
+% end
