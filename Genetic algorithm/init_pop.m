@@ -1,0 +1,35 @@
+function route=init_pop(City_Number, Y, Z, ST, duration, city_distance, num_T, return_time)
+p_set=[];
+ST_set=[];
+temp=[];
+for i=1:City_Number
+    if (Y(i)+Z(i))==1
+        p_set=[p_set,i];
+    else
+        temp=[temp,i];
+    end 
+end
+
+route=[City_Number+1,temp(randperm(length(temp))),City_Number+1];
+index=find(route>City_Number+1-num_T);
+index(mod(1:length(index),3)~=1)=[];
+ST_set=ST(logical(Y+Z));
+[~,ind]=sort(ST_set); 
+p_set=p_set(ind);
+index0=randperm(length(index)-1)+1;
+index1=index0;
+if ~isempty(p_set)
+    for i=1:length(p_set)
+        if isempty(index0)
+            index0=index1;
+        end
+       a=randi(length(index0));
+       b=index0(a);
+       c=randi([index(b-1)+1 index(b)]);
+       index0(a)=[];
+       route=[route(1:c-1),p_set(i),route(c:end)]; 
+       index(b:end)=index(b:end)+1;
+    end
+end
+end
+

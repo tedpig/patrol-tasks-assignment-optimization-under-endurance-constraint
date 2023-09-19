@@ -1,0 +1,62 @@
+% cal start of service
+% the traveled time is equal to the distance
+function [bs, route]= begin_s(route,dist, V, goal)
+    global Y Z ST duration turn_time
+    if length(route)<=turn_time+1
+        bs=0;
+        route=route(1);
+        return;
+    end
+
+    pos_end=find(route>=goal);
+    delet_pos=find(pos_end(2:end)-pos_end(1:end-1)==1);
+    route(pos_end(delet_pos))=[];
+    route(1)=length(dist);
+    route(end)=length(dist);
+    n = length(route); % number of customers
+    %bs = zeros(1,n); 
+    %dur_time=zeros(1,n);
+    % 序列号是从1开始的
+    % for the first customer
+    % the left time window or the 
+    bs(1) = 0;
+    dur_time(1)=V;
+    %bs(1) = max(a(route(1)),dist(1,route(1)+1));
+    i=2;
+    while i <= n
+        if route(i)>=goal
+            bs(i)=max(bs(i-1),Z(route(i-1))*ST(route(i-1)))+duration(route(i-1))+dist(route(i-1),route(i));
+            dur_time(i)=V;
+        else
+            if i-1==1
+                op_time=0;
+            else
+                op_time=duration(route(i-1));
+            end
+            if route(i-1)>=goal && Z(route(i))==1
+                pre_be=max(bs(i-1),Z(route(i-1))*ST(route(i-1)))+max(op_time,ST(route(i))-bs(i-1)-dist(route(i-1),route(i))); 
+            else
+                pre_be=max(bs(i-1),Z(route(i-1))*ST(route(i-1)))+op_time;
+            end
+            %上一节点任务完成时间
+            bs(i)=pre_be+dist(route(i-1),route(i));
+            be=max(bs(i),Z(route(i))*ST(route(i)))+duration(route(i));
+            re_time=be+dist(route(i),route(end));%完成下一个任务后返回终点的时间
+            if re_time-pre_be>dur_time(i-1)
+                bs(i)=pre_be+dist(route(i-1),route(i));%下一节点直接返航
+                dur_time(i)=V;
+                route=[route(1:i-1), route(end)-1, route(i:end)];
+                n=n+1;
+            else
+                dur_time(i)=dur_time(i-1)-(be-bs(i))-dist(route(i-1),route(i));
+            end      
+        end
+        i=i+1;
+    end
+    %back = bs(end) + s(route(end)) + dist(route(end)+1,1);
+
+mm=find(route>=goal);
+if find(mm(2:end)-mm(1:end-1)==1)
+    route
+end
+end

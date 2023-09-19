@@ -1,0 +1,113 @@
+  % 多旅行商问题的遗传算法
+% 20个城市，2条线路
+clear,clc
+close all
+global Y Z ST_P ST duration return_time
+load city_location
+load city_distance.mat
+load city_path.mat
+for i=1:length(nodes)
+    for j=1:length(nodes)
+        city_distance(j,i)=city_distance(i,j);
+        city_path{j,i}=flip(city_path{i,j},1);
+    end
+end
+city_distance=city_distance*1000/360;
+city_location=nodes([2:26,1],:);
+city_distance=city_distance([2:26,1],[2:26,1]);
+city_path=city_path{[2:26,1],[2:26,1]};
+num_T=15;                %旅行商数量
+source=26;              %始发点
+return_time=3;          %最大返回数
+City_Number=25;         %城市数量
+Race_Number=100;        %种群数量
+Iteration=200;          %迭代次数
+P_Cross=0.8;            %交叉概率
+P_Mutation=0.2;         %变异概率
+ST_P=[7	15	9	10	5	20	8	13	17	3	16	22	21	23	4	12	6	24	2	25	1	18	19	11	14];
+ST=[33302	39120	39742	32929	32148	26845	33596	32180	26813	31152	23874	27103	39902	23817	37826	24653	23584	39359	29928	39404	20667	24234	28944	23348	31531];
+duration=[16	17	17	18	13	19	20	18	17	13	18	16	19	13	17	14	20	12	12	13	15	19	14	14	16	18	16	11	17	18];
+Y=[0	0	0	0	1	0	1	0	1	1	0	0	0	0	1	0	0	0	0	0	0	0	0	0	0];
+Z=[0	0	1	0	0	0	0	1	0	0	0	0	1	0	0	0	1	0	0	1	0	0	0	0	0];
+for i=1:length(ST)
+    if Y(i)==1
+        ST(i)=int32(ST(i)/100);
+    else
+        ST(i)=int32(ST(i)/100);
+    end
+end
+% ST_P=randperm(City_Number);
+% ST=randi(20000,1,City_Number)+20000;%最晚允许到达时间
+% duration=randi(10,1,City_Number)+10;
+% Y=zeros(1,City_Number);
+% Z=zeros(1,City_Number);
+% Y(ST_P(1:5))=1;  %第2种任务
+% Z(ST_P(6:10))=1; %第3种任务
+Y=[Y,zeros(1,num_T)];
+Z=[Z,zeros(1,num_T)];
+ST=[ST,zeros(1,num_T)];
+duration=[duration,15*ones(1,num_T)];
+duration(end)=0;
+city_distance1=zeros(City_Number+num_T,City_Number+num_T);
+city_location1=zeros(City_Number+num_T,2);
+city_distance1(1:City_Number,1:City_Number)=city_distance(1:City_Number,1:City_Number);
+city_location1(1:City_Number,:)=city_location(1:City_Number,:);
+city_location1(City_Number+1:City_Number+num_T,:)=repmat(city_location(source,:),num_T,1);
+for i=1:num_T
+   city_distance1(City_Number+i,1:City_Number)=city_distance(source,1:City_Number);
+   city_distance1(1:City_Number,City_Number+i)=city_distance(1:City_Number,source);
+end
+city_distance=city_distance1;
+City_Number=City_Number+num_T-1;
+city_location=city_location1;
+race=zeros(Race_Number,City_Number+2);
+
+for i=1:Race_Number                         %初始化种群
+    temp=randperm(City_Number);
+    route=[City_Number+1,temp,City_Number+1];
+    %route=init_pop(City_Number, Y, Z, ST, duration, city_distance, num_T);
+%    route=ga_hamilton(route, city_distance,num_T);         %使用改良圈算法优化初始种群
+    race(i,:)=route;
+end
+adaptation=ga_adaptation(race,city_distance,num_T);
+p_adaptation=adaptation;
+p_path=race;
+[g_adaptation,ind]=min(p_adaptation);
+g_path=race(ind,:);
+for t=1:Iteration
+    adaptation=ga_adaptation(race,city_distance,num_T);
+    %race1=ga_choose(race,adaptation);
+    for i=1:Race_Number
+        if adaptation(i)<p_adaptation(i)
+            p_adaptation(i)=adaptation(i);
+            p_path(i,:)=race(i,:);
+            if adaptation(i)<g_adaptation
+               g_adaptation=adaptation(i);
+               g_path=race(i,:);
+            end
+        end
+    end
+    for i=1:Race_Number-1
+        if rand>0
+           race(i,:)=crosswithbest(race(i,:),p_path(i,:));
+        else
+           race(i,:)=crosswithbest(race(i,:),race(i+1,:));
+        end
+    end
+    race=crosswithbest(race,repmat(g_path,Race_Number,1));
+    %race=crosswithbest(race,race1); 
+    adaptation=ga_adaptation(race,city_distance,num_T);
+    race=ga_choose(race,adaptation);
+    %race = ga_select( race,adaptation );
+    %race=ga_cross1(race,P_Cross);
+    race=ga_mutation(race,P_Mutation,city_distance,num_T,g_adaptation);
+    %race=ga_exchange(race,P_Cross);
+    %race=ga_invert(race,P_Cross);
+    g_path
+    trace(t,:)=[adaptation, dela_all, End_all,path_all];
+end
+[path,val,best_time]=ga_plot(g_path, city_distance, city_location, num_T);
+best_path=path;
+best_value=val;
+pause(0.1);
+

@@ -1,0 +1,21 @@
+function race_set = Tsp_set1(race, num_T) 
+global return_time
+[m,n]=size(race);
+race_set=cell(m,num_T/return_time);
+for j=1:m
+    race_set{j,1}=race(j,1);
+    set=1;
+    set_in=0;
+    for i=2:n-1
+        race_set{j,set}=[race_set{j,set},race(j,i)];
+        if race(j,i)>=n-num_T
+            set_in=set_in+1;
+            if set_in==return_time
+               set=set+1;
+               set_in=0;
+               race_set{j,set}=[race_set{j,set},race(j,i)];
+            end
+        end
+    end
+    race_set{j,set}=[race_set{j,set},race(j,end)];
+end
